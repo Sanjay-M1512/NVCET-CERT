@@ -19,50 +19,50 @@ interface CertificateRecord {
 }
 
 interface CertificateAPIResponse {
-  records: CertificateRecord[];
+  record: CertificateRecord; // Single record now
 }
 
 export default function Certificate() {
   const [, setLocation] = useLocation();
-  const [searchName, setSearchName] = useState('');
+  const [searchId, setSearchId] = useState('');
 
   // Read URL parameter
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const name = params.get('name');
-    if (name) {
-      setSearchName(name);
+    const id = params.get('id'); // changed from 'name' to 'id'
+    if (id) {
+      setSearchId(id);
     }
   }, []);
 
   // React Query
   const { data, isLoading, error } = useQuery<CertificateAPIResponse>({
-    queryKey: ['/api/certificate', searchName],
+    queryKey: ['/api/certificate', searchId],
     queryFn: async () => {
       const response = await fetch(
-        `https://verfi-cert.onrender.com/get_certificate?name=${encodeURIComponent(searchName)}`
+        `https://verfi-cert.onrender.com/get_certificate?id=${encodeURIComponent(searchId)}`
       );
       if (!response.ok) throw new Error('Certificate not found');
       return response.json();
     },
-    enabled: !!searchName,
+    enabled: !!searchId,
     refetchOnWindowFocus: false,
   });
 
-  const certificateUrl = searchName
-    ? `${window.location.origin}?name=${encodeURIComponent(searchName)}`
+  const certificateUrl = searchId
+    ? `${window.location.origin}?id=${encodeURIComponent(searchId)}`
     : '';
 
-  // Map certificate data from first record
-  const certificateData = data?.records?.[0]
+  // Map certificate data
+  const certificateData = data?.record
     ? {
-        apprenticeName: data.records[0].name || 'N/A',
-        fatherName: data.records[0].father_name || 'N/A',
-        motherName: data.records[0].mother_name || 'N/A',
-        tradeName: data.records[0].trade_name || 'N/A',
-        establishmentName: data.records[0].establishment_name || 'N/A',
-        establishmentAddress: data.records[0].establishment_address || 'N/A',
-        trainingDuration: data.records[0].training_duration || 'N/A',
+        apprenticeName: data.record.name || 'N/A',
+        fatherName: data.record.father_name || 'N/A',
+        motherName: data.record.mother_name || 'N/A',
+        tradeName: data.record.trade_name || 'N/A',
+        establishmentName: data.record.establishment_name || 'N/A',
+        establishmentAddress: data.record.establishment_address || 'N/A',
+        trainingDuration: data.record.training_duration || 'N/A',
       }
     : null;
 
@@ -85,7 +85,7 @@ export default function Certificate() {
         {error && (
           <div className="text-center py-12">
             <p className="text-destructive text-lg font-semibold">
-              Certificate not found. Please check the apprentice name in the URL.
+              Certificate not found. Please check the certificate ID in the URL.
             </p>
           </div>
         )}
@@ -107,7 +107,7 @@ export default function Certificate() {
 
                 <Button variant="default" className="w-full" asChild>
                   <a
-                    href={`https://verfi-cert.onrender.com/get_certificate?name=${encodeURIComponent(searchName)}`}
+                    href={`https://verfi-cert.onrender.com/get_certificate?id=${encodeURIComponent(searchId)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -115,27 +115,19 @@ export default function Certificate() {
                     View on Blockchain
                   </a>
                 </Button>
-
-                {/* <Button
-                  variant="outline"
-                  className="w-full print:hidden"
-                  onClick={() => window.print()}
-                >
-                  Print Certificate
-                </Button> */}
               </div>
             </div>
           </div>
         )}
 
         {/* Empty state */}
-        {!searchName && !isLoading && (
+        {!searchId && !isLoading && (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold font-official mb-3" style={{ color: 'hsl(220, 60%, 25%)' }}>
               Blockchain Verified Apprenticeship Certificates
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Please provide a certificate link with <code>?name=YourName</code> in the URL to view the certificate.
+              Please provide a certificate link with <code>?id=DocumentID</code> in the URL to view the certificate.
             </p>
           </div>
         )}
