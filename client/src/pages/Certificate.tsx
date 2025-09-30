@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import CertificateHeader from '@/components/CertificateHeader';
 import BlockchainBadge from '@/components/BlockchainBadge';
@@ -25,7 +24,6 @@ interface CertificateAPIResponse {
 
 export default function Certificate() {
   const [, setLocation] = useLocation();
-  const [apprenticeName, setApprenticeName] = useState('');
   const [searchName, setSearchName] = useState('');
 
   // Read URL parameter
@@ -34,11 +32,10 @@ export default function Certificate() {
     const name = params.get('name');
     if (name) {
       setSearchName(name);
-      setApprenticeName(name);
     }
   }, []);
 
-  // React Query v5 - object form
+  // React Query
   const { data, isLoading, error } = useQuery<CertificateAPIResponse>({
     queryKey: ['/api/certificate', searchName],
     queryFn: async () => {
@@ -51,13 +48,6 @@ export default function Certificate() {
     enabled: !!searchName,
     refetchOnWindowFocus: false,
   });
-
-  const handleSearch = () => {
-    if (apprenticeName.trim()) {
-      setSearchName(apprenticeName.trim());
-      setLocation(`/?name=${encodeURIComponent(apprenticeName.trim())}`);
-    }
-  };
 
   const certificateUrl = searchName
     ? `${window.location.origin}?name=${encodeURIComponent(searchName)}`
@@ -84,40 +74,18 @@ export default function Certificate() {
       <CertificateHeader />
 
       <div className="max-w-6xl mx-auto mt-8">
-        {/* Search Input */}
-        <div className="mb-8 print:hidden">
-          <div className="flex gap-3 max-w-2xl mx-auto">
-            <Input
-              type="text"
-              placeholder="Enter apprentice name to verify certificate..."
-              value={apprenticeName}
-              onChange={(e) => setApprenticeName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
-              data-testid="input-apprentice-name"
-            />
-            <Button
-              onClick={handleSearch}
-              disabled={!apprenticeName.trim() || isLoading}
-              data-testid="button-search"
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
-            </Button>
-          </div>
-        </div>
-
         {/* Loading */}
         {isLoading && (
           <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-12 h-12 animate-spin text-primary" data-testid="loader-fetching" />
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
           </div>
         )}
 
         {/* Error */}
         {error && (
           <div className="text-center py-12">
-            <p className="text-destructive text-lg font-semibold" data-testid="text-error">
-              Certificate not found. Please check the apprentice name and try again.
+            <p className="text-destructive text-lg font-semibold">
+              Certificate not found. Please check the apprentice name in the URL.
             </p>
           </div>
         )}
@@ -135,9 +103,9 @@ export default function Certificate() {
               </div>
 
               <div className="flex flex-col gap-6">
-                <QRCodeSection url={certificateUrl} />
+                {/* <QRCodeSection url={certificateUrl} /> */}
 
-                <Button variant="default" className="w-full" asChild data-testid="button-verify-blockchain">
+                <Button variant="default" className="w-full" asChild>
                   <a
                     href={`https://verfi-cert.onrender.com/get_certificate?name=${encodeURIComponent(searchName)}`}
                     target="_blank"
@@ -148,14 +116,13 @@ export default function Certificate() {
                   </a>
                 </Button>
 
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full print:hidden"
                   onClick={() => window.print()}
-                  data-testid="button-print"
                 >
                   Print Certificate
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
@@ -168,8 +135,7 @@ export default function Certificate() {
               Blockchain Verified Apprenticeship Certificates
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Enter an apprentice name above to view and verify their official vocational training certificate, authenticated
-              on the blockchain for security and authenticity.
+              Please provide a certificate link with <code>?name=YourName</code> in the URL to view the certificate.
             </p>
           </div>
         )}
