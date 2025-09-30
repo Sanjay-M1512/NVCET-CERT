@@ -1,20 +1,21 @@
 import { Card } from '@/components/ui/card';
 
-interface CertificateData {
-  apprenticeName: string;
-  fatherName: string;
-  motherName: string;
-  tradeName: string;
-  establishmentName: string;
-  establishmentAddress: string;
-  trainingDuration: string;
-}
-
 interface CertificateCardProps {
-  data: CertificateData;
+  data: Record<string, unknown>;
 }
 
 export default function CertificateCard({ data }: CertificateCardProps) {
+  const entries = Object.entries(data || {})
+    .map(([key, value]) => ({
+      key,
+      value:
+        value === null || value === undefined
+          ? '—'
+          : typeof value === 'object'
+          ? JSON.stringify(value)
+          : String(value),
+    }));
+
   return (
     <Card className="relative overflow-visible p-8 md:p-12 bg-white" style={{
       border: '8px double',
@@ -36,54 +37,16 @@ export default function CertificateCard({ data }: CertificateCardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        <div className="space-y-1">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Apprentice Name</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-apprentice-name">
-            {data.apprenticeName}
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Trade Name</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-trade-name">
-            {data.tradeName}
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Father's / Guardian Name</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-father-name">
-            {data.fatherName}
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Mother's Name</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-mother-name">
-            {data.motherName}
-          </p>
-        </div>
-
-        <div className="space-y-1 lg:col-span-2">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Establishment Name</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-establishment-name">
-            {data.establishmentName}
-          </p>
-        </div>
-
-        <div className="space-y-1 lg:col-span-2">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Establishment Address</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-establishment-address">
-            {data.establishmentAddress}
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">Training Duration</label>
-          <p className="text-lg font-semibold border-b border-dotted pb-2" style={{ color: 'hsl(220, 60%, 25%)' }} data-testid="text-training-duration">
-            {data.trainingDuration}
-          </p>
-        </div>
+        {entries.map((entry) => (
+          <div key={entry.key} className="space-y-1">
+            <label className="text-xs uppercase tracking-widest font-medium text-muted-foreground">
+              {entry.key}
+            </label>
+            <p className="text-lg font-semibold border-b border-dotted pb-2 break-words" style={{ color: 'hsl(220, 60%, 25%)' }}>
+              {entry.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
@@ -103,3 +66,5 @@ export default function CertificateCard({ data }: CertificateCardProps) {
     </Card>
   );
 }
+
+

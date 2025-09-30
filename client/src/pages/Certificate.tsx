@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { doc, getDoc } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Loader2 } from 'lucide-react';
@@ -18,9 +20,7 @@ interface CertificateRecord {
   training_duration?: string;
 }
 
-interface CertificateAPIResponse {
-  record: CertificateRecord; // Single record now
-}
+interface CertificateDoc extends CertificateRecord {}
 
 export default function Certificate() {
   const [, setLocation] = useLocation();
@@ -36,14 +36,15 @@ export default function Certificate() {
   }, []);
 
   // React Query
-  const { data, isLoading, error } = useQuery<CertificateAPIResponse>({
-    queryKey: ['/api/certificate', searchId],
+  const { data, isLoading, error } = useQuery<CertificateDoc | null>({
+    queryKey: ['firestore-certificate', searchId],
     queryFn: async () => {
-      const response = await fetch(
-        `https://verfi-cert.onrender.com/get_certificate?id=${encodeURIComponent(searchId)}`
-      );
-      if (!response.ok) throw new Error('Certificate not found');
-      return response.json();
+      if (!searchId) return null;
+      const db = getDb();
+      const ref = doc(db, 'certificates', searchId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Certificate not found');
+      return snap.data() as CertificateDoc;
     },
     enabled: !!searchId,
     refetchOnWindowFocus: false,
@@ -54,15 +55,15 @@ export default function Certificate() {
     : '';
 
   // Map certificate data
-  const certificateData = data?.record
+  const certificateData = data
     ? {
-        apprenticeName: data.record.name || 'N/A',
-        fatherName: data.record.father_name || 'N/A',
-        motherName: data.record.mother_name || 'N/A',
-        tradeName: data.record.trade_name || 'N/A',
-        establishmentName: data.record.establishment_name || 'N/A',
-        establishmentAddress: data.record.establishment_address || 'N/A',
-        trainingDuration: data.record.training_duration || 'N/A',
+        apprenticeName: data.name || 'N/A',
+        fatherName: data.father_name || 'N/A',
+        motherName: data.mother_name || 'N/A',
+        tradeName: data.trade_name || 'N/A',
+        establishmentName: data.establishment_name || 'N/A',
+        establishmentAddress: data.establishment_address || 'N/A',
+        trainingDuration: data.training_duration || 'N/A',
       }
     : null;
 
@@ -105,16 +106,18 @@ export default function Certificate() {
               <div className="flex flex-col gap-6">
                 {/* <QRCodeSection url={certificateUrl} /> */}
 
-                <Button variant="default" className="w-full" asChild>
-                  <a
-                    href={`https://verfi-cert.onrender.com/get_certificate?id=${encodeURIComponent(searchId)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View on Blockchain
-                  </a>
-                </Button>
+                {searchId && (
+                  <Button variant="default" className="w-full" asChild>
+                    <a
+                      href={`${window.location.origin}?id=${encodeURIComponent(searchId)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Share certificate link
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
